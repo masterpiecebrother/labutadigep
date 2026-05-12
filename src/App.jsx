@@ -19,26 +19,26 @@ const LOCAL_STATE_KEY = 'sistema-cgpe:state:v1';
 // DADOS
 // ============================================================================
 const INITIAL_USERS = [
-  { id: 1, name: 'Antônio (Chefe DIGEP)', email: 'admin',                        role: 'admin', modality: 'Teletrabalho parcial', hoursPerMonth: 56, monitoramentos: 0 },
-  { id: 2, name: 'Luiz Felipe D\'Almeida', email: 'luiz.felipe@inpi.gov.br',     role: 'user',  modality: 'Presencial',            hoursPerMonth: 56, monitoramentos: 3 },
-  { id: 3, name: 'Thais Carvalho',         email: 'thais.carvalho@inpi.gov.br',  role: 'user',  modality: 'Teletrabalho parcial', hoursPerMonth: 56, monitoramentos: 2 },
-  { id: 4, name: 'Diego Hervé',            email: 'diego.herve@inpi.gov.br',     role: 'user',  modality: 'Teletrabalho parcial', hoursPerMonth: 56, monitoramentos: 2 },
+  { id: 1, name: 'Antônio (Chefe DIGEP)', email: 'admin',                        role: 'admin', modality: 'Teletrabalho parcial', hoursPerMonth: 56, monitoramentos: 0, divisao: 'DIGEP' },
+  { id: 2, name: 'Luiz Felipe D\'Almeida', email: 'luiz.felipe@inpi.gov.br',     role: 'user',  modality: 'Presencial',            hoursPerMonth: 56, monitoramentos: 3, divisao: 'DIGEP' },
+  { id: 3, name: 'Thais Carvalho',         email: 'thais.carvalho@inpi.gov.br',  role: 'user',  modality: 'Teletrabalho parcial', hoursPerMonth: 56, monitoramentos: 2, divisao: 'DIGEP' },
+  { id: 4, name: 'Diego Hervé',            email: 'diego.herve@inpi.gov.br',     role: 'user',  modality: 'Teletrabalho parcial', hoursPerMonth: 56, monitoramentos: 2, divisao: 'DIGEP' },
 ];
 
 const INITIAL_ENTREGAS_MACRO = [
-  { id:  1, processos: 'Entregas de Rotina',      entrega: 'Central de Monitoramento do Plano de Ação atualizada com resultados de dezembro',                peso: 30, prazo: '2026-12-31', area: 'DIGEP' },
-  { id:  2, processos: 'Entregas de Rotina',      entrega: 'Reuniões de M&A de projetos estratégicos realizadas e base de dados qualitativa atualizada',     peso: 30, prazo: '2026-12-31', area: 'DIGEP' },
-  { id:  3, processos: 'Entregas de Rotina',      entrega: 'Relatório de recursos críticos atualizados',                                                     peso: 30, prazo: '2026-12-31', area: 'DIGEP' },
-  { id:  4, processos: 'Entregas de Rotina',      entrega: 'Relatório de M&A do Plano de Ação 2026 elaborado',                                               peso: 30, prazo: '2026-12-31', area: 'DIGEP' },
-  { id:  5, processos: 'Entregas de Rotina',      entrega: 'Relatório de monitoramento das metas e entregas do INPI no Plano de Ação da ENPI elaborado',      peso: 30, prazo: '2026-12-31', area: 'DIGEP' },
-  { id:  6, processos: 'Entregas de Rotina',      entrega: 'Relatório de monitoramento das metas e entregas do INPI no PPA 2024-2027 elaborado',              peso: 30, prazo: '2026-12-31', area: 'DIGEP' },
-  { id:  7, processos: 'Projetos de Melhoria',    entrega: 'Portfólio de projetos estratégicos do Plano de Ação 2027 aprovado',                              peso: 60, prazo: '2026-11-30', area: 'DIGEP' },
-  { id:  8, processos: 'Projetos de Melhoria',    entrega: 'Proposta de diretrizes gerais para ocupação e capacitação dos Cargos de Chefe de Projeto II',    peso: 30, prazo: '2026-04-30', area: 'DIGEP' },
-  { id:  9, processos: 'Projetos de Melhoria',    entrega: 'Criação do Comitê de Projetos Estratégicos',                                                     peso: 30, prazo: '2026-03-31', area: 'DIGEP' },
-  { id: 10, processos: 'Projetos de Melhoria',    entrega: 'Guia de Gerenciamento de Projetos Estratégicos do INPI elaborado',                               peso: 60, prazo: '2026-06-30', area: 'DIGEP' },
-  { id: 11, processos: 'Projetos de Melhoria',    entrega: 'Nova versão da Central de Monitoramento do Plano de Ação implantada',                            peso: 30, prazo: '2026-04-30', area: 'DIGEP' },
-  { id: 12, processos: 'Projetos de Melhoria',    entrega: 'Versão para celular do BI da Central de Monitoramento do Plano de Ação construída',              peso: 30, prazo: '2026-06-30', area: 'DIGEP' },
-  { id: 13, processos: 'Projetos de Melhoria',    entrega: 'Treinamento interno na metodologia de gerenciamento de projetos do INPI realizado',              peso: 30, prazo: '2026-06-30', area: 'DIGEP' },
+  { id:  1, processos: 'Entregas de Rotina',      entrega: 'Central de Monitoramento do Plano de Ação atualizada com resultados de dezembro',                peso: 30, prazo: '2026-12-31', divisao: 'DIGEP' },
+  { id:  2, processos: 'Entregas de Rotina',      entrega: 'Reuniões de M&A de projetos estratégicos realizadas e base de dados qualitativa atualizada',     peso: 30, prazo: '2026-12-31', divisao: 'DIGEP' },
+  { id:  3, processos: 'Entregas de Rotina',      entrega: 'Relatório de recursos críticos atualizados',                                                     peso: 30, prazo: '2026-12-31', divisao: 'DIGEP' },
+  { id:  4, processos: 'Entregas de Rotina',      entrega: 'Relatório de M&A do Plano de Ação 2026 elaborado',                                               peso: 30, prazo: '2026-12-31', divisao: 'DIGEP' },
+  { id:  5, processos: 'Entregas de Rotina',      entrega: 'Relatório de monitoramento das metas e entregas do INPI no Plano de Ação da ENPI elaborado',      peso: 30, prazo: '2026-12-31', divisao: 'DIGEP' },
+  { id:  6, processos: 'Entregas de Rotina',      entrega: 'Relatório de monitoramento das metas e entregas do INPI no PPA 2024-2027 elaborado',              peso: 30, prazo: '2026-12-31', divisao: 'DIGEP' },
+  { id:  7, processos: 'Projetos de Melhoria',    entrega: 'Portfólio de projetos estratégicos do Plano de Ação 2027 aprovado',                              peso: 60, prazo: '2026-11-30', divisao: 'DIGEP' },
+  { id:  8, processos: 'Projetos de Melhoria',    entrega: 'Proposta de diretrizes gerais para ocupação e capacitação dos Cargos de Chefe de Projeto II',    peso: 30, prazo: '2026-04-30', divisao: 'DIGEP' },
+  { id:  9, processos: 'Projetos de Melhoria',    entrega: 'Criação do Comitê de Projetos Estratégicos',                                                     peso: 30, prazo: '2026-03-31', divisao: 'DIGEP' },
+  { id: 10, processos: 'Projetos de Melhoria',    entrega: 'Guia de Gerenciamento de Projetos Estratégicos do INPI elaborado',                               peso: 60, prazo: '2026-06-30', divisao: 'DIGEP' },
+  { id: 11, processos: 'Projetos de Melhoria',    entrega: 'Nova versão da Central de Monitoramento do Plano de Ação implantada',                            peso: 30, prazo: '2026-04-30', divisao: 'DIGEP' },
+  { id: 12, processos: 'Projetos de Melhoria',    entrega: 'Versão para celular do BI da Central de Monitoramento do Plano de Ação construída',              peso: 30, prazo: '2026-06-30', divisao: 'DIGEP' },
+  { id: 13, processos: 'Projetos de Melhoria',    entrega: 'Treinamento interno na metodologia de gerenciamento de projetos do INPI realizado',              peso: 30, prazo: '2026-06-30', divisao: 'DIGEP' },
 ];
 
 const INITIAL_TASKS = [
@@ -395,7 +395,7 @@ export default function App() {
     const task = { id: Date.now(), title:newTask.title, etapas:newTask.etapas, assigned_to:newTask.assigned_to, has_collaborator:false, status:'Pendente', data_criacao:newTask.data_criacao, data_fim:newTask.data_fim, is_running:false, actual_seconds:0, data_conclusao:null, peso2:newTask.peso2||30 };
     commitTasks([task, ...tasks]);
     if (!systemConfig.entregasMacro.find(m => m.entrega===task.title)) {
-      const nm = { id:Date.now()+1, processos:'A Definir', entrega:task.title, peso:30, prazo:'', area:'DIGEP' };
+      const nm = { id:Date.now()+1, processos:'A Definir', entrega:task.title, peso:30, prazo:'', divisao:'DIGEP' };
       const upd = [nm, ...systemConfig.entregasMacro];
       setSystemConfig(p => ({ ...p, entregasMacro:upd }));
       setTempConfig(p => ({ ...p, entregasMacro:upd }));
@@ -416,10 +416,10 @@ export default function App() {
     showToast("Configurações salvas!");
   };
 
-  const handleAddEntregaMacro    = () => setTempConfig(p => ({ ...p, entregasMacro:[{ id:Date.now(), processos:'', entrega:'Nova Entrega', peso:30, prazo:'', area:'' }, ...p.entregasMacro] }));
+  const handleAddEntregaMacro    = () => setTempConfig(p => ({ ...p, entregasMacro:[{ id:Date.now(), processos:'', entrega:'Nova Entrega', peso:30, prazo:'', divisao:'DIGEP' }, ...p.entregasMacro] }));
   const handleRemoveEntregaMacro = (id) => setTempConfig(p => ({ ...p, entregasMacro:p.entregasMacro.filter(m => m.id!==id) }));
   const handleEntregaMacroChange = (id, f, v) => setTempConfig(p => ({ ...p, entregasMacro:p.entregasMacro.map(m => m.id===id?{...m,[f]:v}:m) }));
-  const handleAddTempUser        = () => setTempUsers([...tempUsers, { id:Date.now(), name:'Novo Servidor', email:'servidor@inpi.gov.br', role:'user', modality:'Presencial', hoursPerMonth:56, monitoramentos:0 }]);
+  const handleAddTempUser        = () => setTempUsers([...tempUsers, { id:Date.now(), name:'Novo Servidor', email:'servidor@inpi.gov.br', role:'user', modality:'Presencial', hoursPerMonth:56, monitoramentos:0, divisao:'DIGEP' }]);
   const handleRemoveTempUser     = (id) => tempUsers.length>1 && setTempUsers(tempUsers.filter(u => u.id!==id));
   const handleTempUserChange     = (id, f, v) => setTempUsers(tempUsers.map(u => u.id===id?{...u,[f]:v}:u));
   const handleLogoUpload = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ setSystemConfig(p=>({...p,logoUrl:ev.target.result})); setTempConfig(p=>({...p,logoUrl:ev.target.result})); showToast("Logotipo atualizado!"); }; r.readAsDataURL(f); };
@@ -432,7 +432,7 @@ export default function App() {
         const rows=csv.split('\n').map(r=>r.trim()).filter(Boolean);
         if(rows.length<2) throw new Error();
         const ne=[];
-        for(let i=1;i<rows.length;i++){const row=rows[i].split(sep);if(row.length>=2)ne.push({id:Date.now()+i,processos:row[0]?.replace(/["']/g,'')||'',entrega:row[1]?.replace(/["']/g,'')||'',peso:parseInt(row[2])||30,prazo:row[3]?.replace(/["']/g,'')||'',area:row[4]?.replace(/["']/g,'')||''});}
+        for(let i=1;i<rows.length;i++){const row=rows[i].split(sep);if(row.length>=2)ne.push({id:Date.now()+i,processos:row[0]?.replace(/['"]/g,'')||'',entrega:row[1]?.replace(/['"]/g,'')||'',peso:parseInt(row[2])||30,prazo:row[3]?.replace(/['"]/g,'')||'',divisao:row[4]?.replace(/['"]/g,'')||'DIGEP'});}
         if(ne.length>0){setTempConfig(p=>({...p,entregasMacro:ne}));showToast(`${ne.length} entregas importadas!`);}
       } catch { showToast("Erro ao processar CSV."); }
     };
@@ -619,8 +619,8 @@ export default function App() {
     actions:    { label: '',            width: 52,  fixed: true },
     farol:      { label: 'Farol',       minWidth: 90 },
     entrega:    { label: 'Entrega Macro', minWidth: 220 },
-    peso2:      { label: 'Peso 2',      width: 90,  center: true, highlight: 'emerald' },
-    atividade:  { label: 'Atividade',   minWidth: 220 },
+    peso2:      { label: 'Peso Entrega',      width: 90,  center: true, highlight: 'emerald' },
+    atividade:  { label: 'Entrega Macro',   minWidth: 220 },
     cronograma: { label: 'Cronograma',  minWidth: 200 },
     carga:      { label: 'Carga Mensal', minWidth: 120, center: true, highlight: 'blue' },
     responsavel:{ label: 'Responsável', minWidth: 110 },
@@ -680,7 +680,8 @@ export default function App() {
           </td>
         );
       case 'atividade':
-        return <td key={colId} className="py-2.5 px-3"><span className="text-xs text-gray-700 line-clamp-2" title={task.etapas}>{task.etapas}</span></td>;
+        const isMelhoria = systemConfig.entregasMacro.find(m => m.entrega===task.title)?.processos === 'Projetos de Melhoria';
+        return <td key={colId} className="py-2.5 px-3"><span className="text-xs text-gray-700 break-words whitespace-normal" title={isMelhoria?task.title:task.etapas}>{isMelhoria?task.title:task.etapas}</span></td>;
       case 'cronograma':
         return (
           <td key={colId} className="py-2.5 px-3">
@@ -1158,7 +1159,7 @@ export default function App() {
                       <table className="w-full text-sm" style={{minWidth:980}}>
                         <thead className="bg-gray-50 border-b border-gray-100">
                           <tr>
-                            {['Nome','E-mail','Perfil','Modalidade → Fator','Carga/mês','Qtd Monitoramentos',''].map(h=>(
+                            {['Nome','E-mail','Perfil','Modalidade → Fator','Carga/mês','Divisão','Qtd Monitoramentos',''].map(h=>(
                               <th key={h} className="text-left px-4 py-3 text-[10px] font-sora font-semibold uppercase tracking-widest text-gray-400">{h}</th>
                             ))}
                           </tr>
@@ -1194,12 +1195,13 @@ export default function App() {
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <div className="flex items-center gap-1">
-                                    <input type="number" step="1" min="1" value={u.hoursPerMonth} onChange={e=>handleTempUserChange(u.id,'hoursPerMonth',parseInt(e.target.value))} className={`${inputCls} w-20 text-center font-sora font-bold text-[#0B2461]`}/>
-                                    <span className="text-gray-400 text-xs font-medium">h</span>
+                                  <div className="flex flex-col gap-1">
+                                    <select value={u.divisao||'DIGEP'} onChange={e=>handleTempUserChange(u.id,'divisao',e.target.value)} className={`${selectCls} w-full`}>
+                                      <option value="DIGEP">DIGEP</option>
+                                      <option value="DIPLAD">DIPLAD</option>
+                                    </select>
                                   </div>
                                 </td>
-                                {/* Qtd Monitoramentos */}
                                 <td className="px-4 py-3">
                                   <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-1">
@@ -1271,7 +1273,7 @@ export default function App() {
                     <div className="overflow-auto" style={{maxHeight:380}}>
                       <table className="w-full text-xs" style={{minWidth:800}}>
                         <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
-                          <tr>{['Processo','Entrega','Peso Macro','Prazo','Área',''].map(h=><th key={h} className="text-left px-3 py-3 font-sora font-semibold text-[10px] uppercase tracking-widest text-gray-400">{h}</th>)}</tr>
+                          <tr>{['Processo','Peso Processo','Entrega','Prazo','Divisão',''].map(h=><th key={h} className="text-left px-3 py-3 font-sora font-semibold text-[10px] uppercase tracking-widest text-gray-400">{h}</th>)}</tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                           {tempConfig.entregasMacro.map(m=>(
@@ -1280,14 +1282,19 @@ export default function App() {
                                 <input type="text" value={m.processos} onChange={e=>handleEntregaMacroChange(m.id,'processos',e.target.value)} className={inputCls}/>
                                 {m.processos==='Projetos de Melhoria' && <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded mt-1 block font-bold w-fit">Regra colabs ativa</span>}
                               </td>
-                              <td className="px-3 py-2"><input type="text" value={m.entrega} onChange={e=>handleEntregaMacroChange(m.id,'entrega',e.target.value)} className={`${inputCls} font-semibold`} required/></td>
                               <td className="px-3 py-2">
                                 <select value={m.peso} onChange={e=>handleEntregaMacroChange(m.id,'peso',parseInt(e.target.value))} className={`${selectCls} font-bold w-24`}>
                                   <option value={10}>10</option><option value={30}>30</option><option value={60}>60</option>
                                 </select>
                               </td>
+                              <td className="px-3 py-2"><input type="text" value={m.entrega} onChange={e=>handleEntregaMacroChange(m.id,'entrega',e.target.value)} className={`${inputCls} font-semibold break-words whitespace-normal`} required/></td>
                               <td className="px-3 py-2"><input type="text" value={m.prazo} onChange={e=>handleEntregaMacroChange(m.id,'prazo',e.target.value)} className={inputCls} placeholder="31/12/2026"/></td>
-                              <td className="px-3 py-2"><input type="text" value={m.area} onChange={e=>handleEntregaMacroChange(m.id,'area',e.target.value)} className={inputCls}/></td>
+                              <td className="px-3 py-2">
+                                <select value={m.divisao||m.area||'DIGEP'} onChange={e=>handleEntregaMacroChange(m.id,'divisao',e.target.value)} className={selectCls}>
+                                  <option value="DIGEP">DIGEP</option>
+                                  <option value="DIPLAD">DIPLAD</option>
+                                </select>
+                              </td>
                               <td className="px-3 py-2"><button type="button" onClick={()=>handleRemoveEntregaMacro(m.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={13}/></button></td>
                             </tr>
                           ))}
