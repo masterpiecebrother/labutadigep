@@ -87,7 +87,7 @@ const DEFAULT_CONFIG = {
 
 // Ordem padrão das colunas da tabela
 const DEFAULT_COLUMN_ORDER = [
-  'actions', 'farol', 'entrega', 'peso2', 'atividade',
+  'actions', 'farol', 'processo', 'pesoProcesso', 'entrega', 'peso2', 'complexidade',
   'cronograma', 'carga', 'responsavel', 'colabs', 'tempo', 'conclusao', 'status'
 ];
 
@@ -193,9 +193,12 @@ export default function App() {
   const [auditLoading,   setAuditLoading]   = useState(false);
   const saveTimerRef = useRef(null);
   const [newTask, setNewTask] = useState({
+    processo: systemConfig.entregasMacro[0]?.processos || 'Projetos de Melhoria',
     title: INITIAL_ENTREGAS_MACRO[0]?.entrega || '', etapas: '', assigned_to: 1,
     data_criacao: new Date().toISOString().split('T')[0],
     data_fim:     new Date().toISOString().split('T')[0],
+    pesoProcesso: systemConfig.entregasMacro[0]?.peso || 30,
+    complexidade: 1,
     peso2: 30
   });
 
@@ -366,7 +369,14 @@ export default function App() {
     return systemConfig.factorPresencial;
   };
 
-  const uniqueProjects = useMemo(() => Array.from(new Set(systemConfig.entregasMacro.map(m => m.entrega))), [systemConfig.entregasMacro]);
+  const uniqueProcesses = useMemo(() => {
+    const fromConfig = systemConfig.entregasMacro.map(m => m.processos || m.entrega).filter(Boolean);
+    const fromTasks = tasks.map(t => t.processo || systemConfig.entregasMacro.find(m => m.entrega === t.title)?.processos).filter(Boolean);
+    return Array.from(new Set([...fromConfig, ...fromTasks]));
+  }, [systemConfig.entregasMacro, tasks]);
+
+  const getTaskProcess = (task) => task.processo || systemConfig.entregasMacro.find(m => m.entrega === task.title)?.processos || 'A Definir';
+  const getTaskProcessWeight = (task) => task.pesoProcesso ?? systemConfig.entregasMacro.find(m => m.entrega === task.title)?.peso ?? 30;
 
   // Helpers CRUD
   const commitTasks = (newTasks) => {
@@ -386,22 +396,43 @@ export default function App() {
   const toggleTimer          = (id) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, is_running:!t.is_running, status:!t.is_running?'Em andamento':t.status }));
   const toggleCollaborator   = (id) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, has_collaborator:!t.has_collaborator }));
   const handleTitleChange    = (id, v) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, title:v }));
+  const handleTaskFieldChange = (id, field, v) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, [field]:v }));
   const handleAssigneeChange = (id, v) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, assigned_to:v }));
   const handleDateChange     = (id, f, v) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, [f]:v }));
   const handlePeso2Change    = (id, v) => commitTasks(tasks.map(t => t.id!==id?t:{ ...t, peso2:v }));
 
   const handleAddTask = (e) => {
     e.preventDefault();
-    const task = { id: Date.now(), title:newTask.title, etapas:newTask.etapas, assigned_to:newTask.assigned_to, has_collaborator:false, status:'Pendente', data_criacao:newTask.data_criacao, data_fim:newTask.data_fim, is_running:false, actual_seconds:0, data_conclusao:null, peso2:newTask.peso2||30 };
+    const task = {
+      id: Date.now(),
+      processo: newTask.processo,
+      title: newTask.title,
+      etapas: newTask.etapas,
+      assigned_to: newTask.assigned_to,
+      has_collaborator: false,
+      status: 'Pendente',
+      data_criacao: newTask.data_criacao,
+      data_fim: newTask.data_fim,
+      is_running: false,
+      actual_seconds: 0,
+      data_conclusao: null,
+      pesoProcesso: newTask.pesoProcesso || 30,
+      complexidade: newTask.complexidade || 1,
+      peso2: newTask.peso2 || 30
+    };
     commitTasks([task, ...tasks]);
-    if (!systemConfig.entregasMacro.find(m => m.entrega===task.title)) {
-      const nm = { id:Date.now()+1, processos:'A Definir', entrega:task.title, peso:30, prazo:'', divisao:'DIGEP' };
-      const upd = [nm, ...systemConfig.entregasMacro];
-      setSystemConfig(p => ({ ...p, entregasMacro:upd }));
-      setTempConfig(p => ({ ...p, entregasMacro:upd }));
-    }
     setShowTaskForm(false);
-    setNewTask({ title:systemConfig.entregasMacro[0]?.entrega||'', etapas:'', assigned_to:1, data_criacao:new Date().toISOString().split('T')[0], data_fim:new Date().toISOString().split('T')[0], peso2:30 });
+    setNewTask({
+      processo: systemConfig.entregasMacro[0]?.processos || 'Projetos de Melhoria',
+      title: systemConfig.entregasMacro[0]?.entrega || '',
+      etapas: '',
+      assigned_to: 1,
+      data_criacao: new Date().toISOString().split('T')[0],
+      data_fim: new Date().toISOString().split('T')[0],
+      pesoProcesso: systemConfig.entregasMacro[0]?.peso || 30,
+      complexidade: 1,
+      peso2: 30
+    });
     showToast("Atividade cadastrada!");
   };
   const confirmDelete = () => { if (taskToDelete) { commitTasks(tasks.filter(t => t.id!==taskToDelete)); setTaskToDelete(null); showToast("Atividade removida!"); } };
@@ -483,23 +514,27 @@ export default function App() {
 
       const eMap = {};
       monthTasks.forEach(t => {
-        if(!eMap[t.title]){ const m=systemConfig.entregasMacro.find(m=>m.entrega===t.title); eMap[t.title]={weight:m?m.peso:30,count:0}; }
-        eMap[t.title].count++;
+        const processWeight = getTaskProcessWeight(t) * (t.complexidade || 1);
+        const key = `${getTaskProcess(t)}|${t.title}`;
+        if(!eMap[key]) { eMap[key] = { weight: processWeight, count: 0 }; }
+        eMap[key].count++;
       });
 
       const sumW = Object.values(eMap).reduce((a,v)=>a+v.weight,0);
       const alpha = systemConfig.alphaParameter??0.5;
       let sum_H_req=0;
       monthTasks.forEach(t => {
-        const eD=eMap[t.title];
-        const h_e=sumW>0?H_total*(eD.weight/sumW):0;
-        const h_b=eD.count>0?h_e/eD.count:0;
-        sum_H_req+=h_b*(1/Math.pow(t.has_collaborator?2:1,alpha));
+        const key = `${getTaskProcess(t)}|${t.title}`;
+        const eD = eMap[key];
+        const h_e = sumW>0 ? H_total * (eD.weight/sumW) : 0;
+        const h_b = eD.count>0 ? h_e/eD.count : 0;
+        sum_H_req += h_b * (1/Math.pow(t.has_collaborator?2:1,alpha));
       });
       const pool=Math.max(0,H_total-sum_H_req);
 
-      const myED=eMap[task.title]||{weight:30,count:1};
-      const H_e_i=sumW>0?H_total*(myED.weight/sumW):0;
+      const myKey = `${getTaskProcess(task)}|${task.title}`;
+      const myED = eMap[myKey] || { weight: getTaskProcessWeight(task) * (task.complexidade || 1), count: 1 };
+      const H_e_i = sumW>0 ? H_total * (myED.weight/sumW) : 0;
       const H_b=myED.count>0?H_e_i/myED.count:0;
       const c=task.has_collaborator?2:1;
       const FR=1/Math.pow(c,alpha);
@@ -616,18 +651,20 @@ export default function App() {
   // DEFINIÇÃO DAS COLUNAS (para reordenação)
   // ============================================================================
   const COLUMN_DEFS = {
-    actions:    { label: '',            width: 52,  fixed: true },
-    farol:      { label: 'Farol',       minWidth: 90 },
-    entrega:    { label: 'Entrega Macro', minWidth: 220 },
-    peso2:      { label: 'Peso Entrega',      width: 90,  center: true, highlight: 'emerald' },
-    atividade:  { label: 'Entrega Macro',   minWidth: 220 },
-    cronograma: { label: 'Cronograma',  minWidth: 200 },
-    carga:      { label: 'Carga Mensal', minWidth: 120, center: true, highlight: 'blue' },
-    responsavel:{ label: 'Responsável', minWidth: 110 },
-    colabs:     { label: 'Colabs',      width: 64,  center: true },
-    tempo:      { label: 'Tempo Real',  minWidth: 100, center: true },
-    conclusao:  { label: 'Conclusão',   minWidth: 120 },
-    status:     { label: 'Status',      minWidth: 160 },
+    actions:      { label: '',            width: 52,  fixed: true },
+    farol:        { label: 'Farol',       minWidth: 90 },
+    processo:     { label: 'Processo',    minWidth: 180 },
+    pesoProcesso: { label: 'Peso Processo', width: 110, center: true, highlight: 'indigo' },
+    entrega:      { label: 'Entrega',      minWidth: 260 },
+    peso2:        { label: 'Peso Entrega', width: 90,  center: true, highlight: 'emerald' },
+    complexidade: { label: 'Complexidade', width: 100, center: true, highlight: 'amber' },
+    cronograma:   { label: 'Cronograma',   minWidth: 200 },
+    carga:        { label: 'Carga Mensal', minWidth: 120, center: true, highlight: 'blue' },
+    responsavel:  { label: 'Responsável',  minWidth: 110 },
+    colabs:       { label: 'Colabs',       width: 64,  center: true },
+    tempo:        { label: 'Tempo Real',   minWidth: 100, center: true },
+    conclusao:    { label: 'Conclusão',    minWidth: 120 },
+    status:       { label: 'Status',       minWidth: 160 },
   };
 
   const inputCls  = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B2461]/20 focus:border-[#0B2461] bg-white transition-all";
@@ -650,22 +687,38 @@ export default function App() {
         );
       case 'farol':
         return <td key={colId} className="py-2.5 px-3"><FarolBadge label={task.farol.label}/></td>;
+      case 'processo':
+        {
+          const processName = getTaskProcess(task);
+          return (
+            <td key={colId} className="py-2.5 px-3">
+              {isAdmin
+                ? <>
+                    <input list="processo-options" value={processName} onChange={e=>handleTaskFieldChange(task.id,'processo',e.target.value)} className={`${inputCls} text-xs font-semibold`} />
+                    <datalist id="processo-options">
+                      {uniqueProcesses.map(p=><option key={p} value={p}/>) }
+                    </datalist>
+                  </>
+                : <span className="font-semibold text-[#0B2461] text-xs break-words whitespace-normal" title={processName}>{processName}</span>}
+            </td>
+          );
+        }
+      case 'pesoProcesso':
+        return (
+          <td key={colId} className="py-2.5 px-3 text-center" style={{background:'rgba(99,102,241,0.08)'}}>
+            <select value={task.pesoProcesso ?? getTaskProcessWeight(task)} onChange={e=>handleTaskFieldChange(task.id,'pesoProcesso',parseInt(e.target.value)||30)} disabled={!isMyTask||task.status==='Concluído'} className={`${selectCls} font-bold w-full`}>
+              <option value={10}>10 pts</option>
+              <option value={30}>30 pts</option>
+              <option value={60}>60 pts</option>
+            </select>
+          </td>
+        );
       case 'entrega':
         return (
           <td key={colId} className="py-2.5 px-3">
-            <div className="flex flex-col gap-1.5">
-              {isAdmin
-                ? <select value={task.title} onChange={e=>handleTitleChange(task.id,e.target.value)} className="w-full border border-gray-200 rounded-md px-2 py-1.5 text-xs font-semibold text-[#0B2461] focus:outline-none bg-white cursor-pointer">
-                    {systemConfig.entregasMacro.map(m=><option key={m.id} value={m.entrega}>{m.entrega}</option>)}
-                  </select>
-                : <span className="font-semibold text-[#0B2461] text-xs line-clamp-2" title={task.title}>{task.title}</span>}
-              <div className="flex items-center gap-1 flex-wrap">
-                <PesoBadge peso={task.inherited_weight} label="MACRO"/>
-                {task.isMelhoria && task.has_collaborator && task.peso2===60 && (
-                  <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-bold">Colab → 30pts</span>
-                )}
-              </div>
-            </div>
+            {isAdmin
+              ? <textarea rows={2} value={task.title} onChange={e=>handleTitleChange(task.id,e.target.value)} className={`${inputCls} min-h-[52px] text-xs`} />
+              : <span className="text-xs text-gray-700 break-words whitespace-normal" title={task.title}>{task.title}</span>}
           </td>
         );
       case 'peso2':
@@ -679,9 +732,18 @@ export default function App() {
             </div>
           </td>
         );
+      case 'complexidade':
+        return (
+          <td key={colId} className="py-2.5 px-3 text-center" style={{background:'rgba(245,158,11,0.08)'}}>
+            <select value={task.complexidade||1} onChange={e=>handleTaskFieldChange(task.id,'complexidade',parseInt(e.target.value)||1)} disabled={!isMyTask||task.status==='Concluído'} className={`${selectCls} font-bold w-full`}>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+            </select>
+          </td>
+        );
       case 'atividade':
-        const isMelhoria = systemConfig.entregasMacro.find(m => m.entrega===task.title)?.processos === 'Projetos de Melhoria';
-        return <td key={colId} className="py-2.5 px-3"><span className="text-xs text-gray-700 break-words whitespace-normal" title={isMelhoria?task.title:task.etapas}>{isMelhoria?task.title:task.etapas}</span></td>;
+        return <td key={colId} className="py-2.5 px-3"><span className="text-xs text-gray-700 break-words whitespace-normal" title={task.etapas}>{task.etapas}</span></td>;
       case 'cronograma':
         return (
           <td key={colId} className="py-2.5 px-3">
@@ -996,8 +1058,8 @@ export default function App() {
                     </table>
                   </div>
                   <div className="border-t border-gray-100 px-4 py-2.5 flex items-center justify-between flex-shrink-0" style={{background:'#FAFBFC'}}>
-                    <p className="text-[11px] text-gray-400">Peso 2 com <strong className="text-amber-600">colabs em Projetos de Melhoria</strong>: redução automática de 60 → 30 pts</p>
-                    <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">Peso 2 efetivo → Carga de Trabalho</span>
+                    <p className="text-[11px] text-gray-400">Peso Entrega com <strong className="text-amber-600">colabs em Projetos de Melhoria</strong>: redução automática de 60 → 30 pts</p>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">Peso Entrega efetivo → Carga de Trabalho</span>
                   </div>
                 </div>
               </div>
@@ -1011,7 +1073,7 @@ export default function App() {
                     <div className="w-12 h-12 bg-[#0B2461] rounded-xl flex items-center justify-center shadow-md"><Target size={22} className="text-white"/></div>
                     <div>
                       <h2 className="font-sora font-bold text-[#0B2461] text-lg leading-tight">Carga de Trabalho</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">Peso 2 por atividade + Monitoramentos × 60 · Ajustado por modalidade</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Peso Entrega por entrega + Monitoramentos × 60 · Ajustado por modalidade</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
@@ -1051,7 +1113,7 @@ export default function App() {
                           {/* Breakdown */}
                           <div className="bg-gray-50 rounded-lg p-3 space-y-1.5 border border-gray-100">
                             <div className="flex justify-between text-xs">
-                              <span className="text-gray-500">Pontos de atividades (Peso 2)</span>
+                              <span className="text-gray-500">Pontos de atividades (Peso Entrega)</span>
                               <span className="font-semibold text-gray-700">{stat.taskPoints} pts</span>
                             </div>
                             <div className="flex justify-between text-xs">
@@ -1094,8 +1156,8 @@ export default function App() {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-900 leading-relaxed space-y-1">
-                  <p><strong>Metodologia — Carga de Trabalho:</strong> Soma dos pontos de Peso 2 de cada atividade + (Qtd. Monitoramentos × 60 pts por servidor). O fator de modalidade é aplicado como multiplicador da meta esperada, usando os parâmetros definidos em Configurações Globais.</p>
-                  <p><strong>Regra automática:</strong> Atividades de "Projetos de Melhoria" com colaborador marcado têm o Peso 2 reduzido de 60 para 30 pontos no cálculo.</p>
+                  <p><strong>Metodologia — Carga de Trabalho:</strong> Soma dos pontos de Peso Entrega de cada entrega + (Qtd. Monitoramentos × 60 pts por servidor). O fator de modalidade é aplicado como multiplicador da meta esperada, usando os parâmetros definidos em Configurações Globais.</p>
+                  <p><strong>Regra automática:</strong> Entregas de "Projetos de Melhoria" com colaborador marcado têm o Peso Entrega reduzido de 60 para 30 pontos no cálculo.</p>
                 </div>
               </div>
             )}
@@ -1257,52 +1319,6 @@ export default function App() {
                       <input type="range" step="0.1" min="0.0" max="1.0" value={tempConfig.alphaParameter} onChange={e=>setTempConfig({...tempConfig,alphaParameter:parseFloat(e.target.value)})} className="w-full accent-[#0B2461]"/>
                       <div className="flex justify-between text-[10px] text-gray-400 mt-1"><span>0.0 (sem redução)</span><span>1.0 (máxima)</span></div>
                     </div>
-                  </div>
-
-                  {/* Entregas macro */}
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                      <div className="flex items-center gap-2"><BookOpen size={16} className="text-[#0B2461]"/><h3 className="font-sora font-bold text-gray-800 text-sm">Entregas Macro</h3><span className="text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold">{tempConfig.entregasMacro.length}</span></div>
-                      <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-emerald-100 transition-colors">
-                          <Upload size={13}/> CSV <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload}/>
-                        </label>
-                        <button type="button" onClick={handleAddEntregaMacro} className="flex items-center gap-1.5 text-xs font-semibold text-[#0B2461] bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors"><Plus size={13}/> Nova</button>
-                      </div>
-                    </div>
-                    <div className="overflow-auto" style={{maxHeight:380}}>
-                      <table className="w-full text-xs" style={{minWidth:800}}>
-                        <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
-                          <tr>{['Processo','Peso Processo','Entrega','Prazo','Divisão',''].map(h=><th key={h} className="text-left px-3 py-3 font-sora font-semibold text-[10px] uppercase tracking-widest text-gray-400">{h}</th>)}</tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                          {tempConfig.entregasMacro.map(m=>(
-                            <tr key={m.id} className="hover:bg-gray-50/60 transition-colors">
-                              <td className="px-3 py-2">
-                                <input type="text" value={m.processos} onChange={e=>handleEntregaMacroChange(m.id,'processos',e.target.value)} className={inputCls}/>
-                                {m.processos==='Projetos de Melhoria' && <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded mt-1 block font-bold w-fit">Regra colabs ativa</span>}
-                              </td>
-                              <td className="px-3 py-2">
-                                <select value={m.peso} onChange={e=>handleEntregaMacroChange(m.id,'peso',parseInt(e.target.value))} className={`${selectCls} font-bold w-24`}>
-                                  <option value={10}>10</option><option value={30}>30</option><option value={60}>60</option>
-                                </select>
-                              </td>
-                              <td className="px-3 py-2"><input type="text" value={m.entrega} onChange={e=>handleEntregaMacroChange(m.id,'entrega',e.target.value)} className={`${inputCls} font-semibold break-words whitespace-normal`} required/></td>
-                              <td className="px-3 py-2"><input type="text" value={m.prazo} onChange={e=>handleEntregaMacroChange(m.id,'prazo',e.target.value)} className={inputCls} placeholder="31/12/2026"/></td>
-                              <td className="px-3 py-2">
-                                <select value={m.divisao||m.area||'DIGEP'} onChange={e=>handleEntregaMacroChange(m.id,'divisao',e.target.value)} className={selectCls}>
-                                  <option value="DIGEP">DIGEP</option>
-                                  <option value="DIPLAD">DIPLAD</option>
-                                </select>
-                              </td>
-                              <td className="px-3 py-2"><button type="button" onClick={()=>handleRemoveEntregaMacro(m.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={13}/></button></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
                   <div className="fixed bottom-0 left-60 right-0 bg-white border-t border-gray-200 px-8 py-4 flex justify-end gap-3 z-20 shadow-lg">
                     <button type="button" onClick={()=>{setTempConfig(systemConfig);setTempUsers(users);}} className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm">Descartar</button>
                     <button type="submit" className="px-6 py-2.5 bg-[#0B2461] text-white rounded-lg font-semibold hover:bg-[#1a3885] transition-colors shadow-md flex items-center gap-2 text-sm"><Save size={15}/> Salvar Configurações</button>
@@ -1323,15 +1339,29 @@ export default function App() {
               </div>
               <form onSubmit={handleAddTask} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Entrega Macro</label>
-                  <select value={newTask.title} onChange={e=>setNewTask({...newTask,title:e.target.value})} required className={`${selectCls} font-semibold text-[#0B2461]`}>
-                    <option value="" disabled>Selecione…</option>
-                    {systemConfig.entregasMacro.map(m=><option key={m.id} value={m.entrega}>{m.entrega} (Peso Macro: {m.peso})</option>)}
-                  </select>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Processo</label>
+                  <input list="processo-options" value={newTask.processo} onChange={e=>setNewTask({...newTask,processo:e.target.value})} required className={`${inputCls} font-semibold text-[#0B2461]`} placeholder="Digite ou selecione o processo…" />
+                  <datalist id="processo-options">
+                    {uniqueProcesses.map(p=><option key={p} value={p}/>) }
+                  </datalist>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Atividade / Etapa</label>
-                  <textarea required rows={3} value={newTask.etapas} onChange={e=>setNewTask({...newTask,etapas:e.target.value})} className={inputCls} placeholder="Descreva a etapa…"/>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Entrega</label>
+                  <textarea required rows={3} value={newTask.title} onChange={e=>setNewTask({...newTask,title:e.target.value})} className={inputCls} placeholder="Descreva a entrega…"/>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Peso Processo</label>
+                    <select value={newTask.pesoProcesso} onChange={e=>setNewTask({...newTask,pesoProcesso:parseInt(e.target.value)})} className={`${selectCls} font-bold`}>
+                      <option value={10}>10 pts</option><option value={30}>30 pts</option><option value={60}>60 pts</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Complexidade</label>
+                    <select value={newTask.complexidade} onChange={e=>setNewTask({...newTask,complexidade:parseInt(e.target.value)})} className={`${selectCls} font-bold`}>
+                      <option value={1}>1</option><option value={2}>2</option><option value={3}>3</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -1341,7 +1371,7 @@ export default function App() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Peso 2 (Carga de Trabalho)</label>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Peso Entrega</label>
                     <select value={newTask.peso2} onChange={e=>setNewTask({...newTask,peso2:parseInt(e.target.value)})} className={`${selectCls} font-bold`}>
                       <option value={10}>10 pts</option><option value={30}>30 pts</option><option value={60}>60 pts</option>
                     </select>
