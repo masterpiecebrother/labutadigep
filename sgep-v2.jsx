@@ -388,6 +388,23 @@ export default function App() {
   const clearFilters = () => setTableFilters({ projeto:'all', etapa:'', mes:'all', responsavel:'all', status:'all', colaborador:'all' });
   const hasActiveFilters = Object.values(tableFilters).some(v => v!=='all'&&v!=='');
 
+  const effectiveUsersForCarga = useMemo(() => {
+    if (tempUsers.length !== users.length) return users;
+
+    const hasUnsavedChanges = tempUsers.some(tempUser => {
+      const saved = users.find(u => u.id===tempUser.id);
+      if (!saved) return true;
+      return saved.monitoramentos !== tempUser.monitoramentos
+        || saved.modality !== tempUser.modality
+        || saved.hoursPerMonth !== tempUser.hoursPerMonth
+        || saved.name !== tempUser.name
+        || saved.email !== tempUser.email
+        || saved.role !== tempUser.role;
+    });
+
+    return hasUnsavedChanges ? tempUsers : users;
+  }, [tempUsers, users]);
+
   // ============================================================================
   // CARGA DE TRABALHO (ex-Dashboard) — usa effectivePeso2 + monitoramentos×60
   // ============================================================================
@@ -399,7 +416,7 @@ export default function App() {
     });
 
     const presencialFactor = systemConfig.factorPresencial;
-    const presencialUsers = users.filter(u => getModalityFactor(u.modality)===presencialFactor);
+    const presencialUsers = effectiveUsersForCarga.filter(u => getModalityFactor(u.modality)===presencialFactor);
     let baselinePoints=0;
     if(presencialUsers.length>0){
       const pTasks=filtered.filter(t=>presencialUsers.map(u=>u.id).includes(t.assigned_to));
@@ -408,7 +425,7 @@ export default function App() {
       baselinePoints=(pPts+pMon)/presencialUsers.length;
     }
 
-    return users.map(user => {
+    return effectiveUsersForCarga.map(user => {
       const userTasks=filtered.filter(t=>t.assigned_to===user.id);
       const taskPoints=userTasks.reduce((acc,t)=>acc+(t.effectivePeso2||30),0);
       const monPoints=(user.monitoramentos||0)*60;
